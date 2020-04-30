@@ -3,6 +3,8 @@ from unet import (
     initialize_weights
 )
 
+from metrics import iou
+
 from data import (
     DeepFashion2Dataset,
     DataAugmentation
@@ -22,7 +24,7 @@ cuda = True if torch.cuda.is_available() else False
 # Parameters
 # ---------------
 
-n_epochs = 100
+n_epochs = 250
 batch_size = 1
 n_channels = 3
 n_classes = 6 + 1  # background
@@ -97,8 +99,12 @@ for epoch in range(n_epochs):
         loss.backward()
         optimizer.step()
 
+        # Compute metrics
+        iou_val = iou(batch_masks, predicted_masks)
+
         if iteration % stats_interval == 0:
             writer.add_scalar('Loss', loss.item(), iteration)
+            writer.add_scalar('Iou', iou_val, iteration)
             writer.add_images('Inputs', batch_imgs, iteration)
             predicted_images = torch.argmax(predicted_masks,
                                             dim=1).unsqueeze_(1)
@@ -106,8 +112,8 @@ for epoch in range(n_epochs):
             writer.add_images('Groundtruth', masks.unsqueeze_(1), iteration)
 
         print(
-            "[Epoch %d/%d] [Batch %d/%d] Loss: %f"
-            % (epoch, n_epochs, i, batches_per_epoch, loss.item())
+            "[Epoch %d/%d] [Batch %d/%d] Loss: %f, Iou: %f"
+            % (epoch, n_epochs, i, batches_per_epoch, loss.item(), iou_val)
         )
 
 
