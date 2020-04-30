@@ -1,12 +1,16 @@
 import os
 import random
 from glob import glob
-from typing import List
+from typing import (
+    List,
+    Tuple
+)
 from collections.abc import Iterable
 from dataclasses import dataclass
 
 import skimage.io
 import skimage.transform
+
 import numpy as np
 import matplotlib.pyplot as plt
 from PIL import Image
@@ -74,18 +78,16 @@ class DeepFashion2Dataset(Dataset):
               f'{len(self._image_mask_pairs)} image pairs')
 
     def _transform(self, image, mask):
-        # Resizing + Data augmentation
-        resize = SkimageResize(size=(self._image_resize, self._image_resize))
-        image, mask = resize(image), resize(mask)
+        image = TF.to_pil_image(_resize_image(image, self._image_resize))
+        mask = TF.to_pil_image(_resize_mask(mask, self._image_resize))
 
         if self._data_augmentation is not None:
             image, mask = self._data_augmentation.augment(image, mask)
 
         # Image normalization
-        image, mask = np.array(image), np.array(mask)
-        image = transforms.ToTensor()(image)  # Implicit NCHW conversion
+        image = transforms.ToTensor()(image)
         image = transforms.Normalize(mean=(0,), std=(1,))(image)
-        return image, mask
+        return image, np.array(mask)
 
     def __len__(self):
         return len(self._image_mask_pairs)
@@ -96,22 +98,24 @@ class DeepFashion2Dataset(Dataset):
             idx = idx.tolist()
 
         image_path, mask_path = self._image_mask_pairs[idx]
-        image = Image.open(image_path)
-        mask = Image.open(mask_path)
+        image = skimage.io.imread(image_path)
+        mask = skimage.io.imread(mask_path)
         return self._transform(image, mask)
 
 
-class SkimageResize(object):
+def _resize_image(img: np.ndarray, new_size: int) -> np.ndarray:
+    return skimage.transform.resize(img,
+                                    (new_size, new_size),
+                                    preserve_range=True,
+                                    order=0).astype('uint8')
 
-    """ Resizes numpy array preserving aspect ratio """
 
-    def __init__(self, **args):
-        self._transform_fn = transforms.Resize
-        self._args = args
-
-    def __call__(self, img):
-        img_arr = np.array(img)
-        return self._transform_fn(**self._args)(Image.fromarray(img_arr))
+def _resize_mask(mask: np.ndarray, new_size: int) -> np.ndarray:
+    return skimage.transform.resize(mask,
+                                    (new_size, new_size),
+                                    order=0,  # mode=nearest
+                                    anti_aliasing=False,
+                                    preserve_range=True).astype('uint8')
 
 
 class PairRandomCrop(object):
@@ -144,7 +148,7 @@ if __name__ == '__main__':
     )
 
     data = DeepFashion2Dataset('seg_dataset',
-                               image_resize=575,
+                               image_resize=580,
                                data_augmentation=augmentation)
 
     n_rows = 2
@@ -155,6 +159,8 @@ if __name__ == '__main__':
         axs[i][0].imshow(np.transpose(image, (1, 2, 0)))
         axs[i][0].set_title('Sample image #{}'.format(i))
         axs[i][1].imshow(mask)
-        axs[i][1].set_title('Sample mask #{}'.format(i))
+        labels = np.unique(mask)
+        axs[i][1].set_title('Sample mask #{}. Labels: {}'.format(i, labels))
 
+    plt.tight_layout()
     plt.show()
