@@ -69,16 +69,15 @@ class Unet(nn.Module):
         bottleneck = self._bottleneck(self._maxpool(c_out_4))
         # Build expanding path input by upsampling
         e_input_1 = self._e_input_1(bottleneck)
-        bypass_1 = crop_as(c_out_4, e_input_1)
-        e_input_2 = self._e_input_2(torch.cat((bypass_1, e_input_1), axis=1))
-        bypass_2 = crop_as(c_out_3, e_input_2)
-        e_input_3 = self._e_input_3(torch.cat((bypass_2, e_input_2), axis=1))
-        bypass_3 = crop_as(c_out_2, e_input_3)
-        e_input_4 = self._e_input_4(torch.cat((bypass_3, e_input_3), axis=1))
+        # return e_input_1, c_out_4
+        e_input_2 = self._e_input_2(torch.cat((c_out_4, e_input_1), dim=1))
+        # return e_input_2, c_out_3
+        e_input_3 = self._e_input_3(torch.cat((c_out_3, e_input_2), dim=1))
+        # return e_input_3, c_out_2
+        e_input_4 = self._e_input_4(torch.cat((c_out_2, e_input_3), dim=1))
 
-        # End of expanding path
-        bypass_4 = crop_as(c_out_1, e_input_4)
-        return self._output(torch.cat((bypass_4, e_input_4), axis=1))
+        # # End of expanding path
+        return self._output(torch.cat((c_out_1, e_input_4), axis=1))
 
 
 class DoubleConv2d(nn.Module):
@@ -92,14 +91,14 @@ class DoubleConv2d(nn.Module):
                       out_channels=out_channels,
                       kernel_size=3,
                       stride=1,
-                      padding=0),
+                      padding=1),
             nn.BatchNorm2d(out_channels),
             nn.ReLU(inplace=True),
             nn.Conv2d(in_channels=out_channels,
                       out_channels=out_channels,
                       kernel_size=3,
                       stride=1,
-                      padding=0),
+                      padding=1),
             nn.BatchNorm2d(out_channels),
             nn.ReLU(inplace=True)
         )
@@ -118,21 +117,20 @@ class Upsampling(nn.Module):
             nn.ConvTranspose2d(in_channels=in_channels,
                                out_channels=out_channels,
                                kernel_size=2,
-                               stride=2)
+                               stride=2,
+                               # dilation=5,
+                               padding=0)
         )
 
     def forward(self, x):
         return self._block(x)
 
 
-def crop_as(tensor: torch.Tensor, ref: torch.Tensor) -> torch.Tensor:
-    margin = (ref.shape[2] - tensor.shape[2]) // 2
-    return F.pad(tensor, (margin, margin, margin, margin))
-
-
 def initialize_weights(param):
     class_name = param.__class__.__name__
     if class_name.startswith('Conv'):
+        # Initialization according to original Unet paper
+        # See https://arxiv.org/pdf/1505.04597.pdf
         print(f'Initializing weights for layer {class_name}')
         _, in_maps, k, _ = param.weight.shape
         n = k*k*in_maps
@@ -146,5 +144,8 @@ if __name__ == '__main__':
     device = torch.device("cuda:0") if torch.cuda.is_available() else 'cpu'
     model = Unet(n_classes=5).to(device)
     model.apply(initialize_weights)
-    input_batch = torch.randn((1, 3, 572, 572)).to(device)
+    input_batch = torch.randn((1, 3, 512, 512)).to(device)
     print(model(input_batch).detach().shape)
+    # exp, cont = model(input_batch)
+    # print(f'Expanding: {exp.detach().shape}')
+    # print(f'Contracting: {cont.detach().shape}')
