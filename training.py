@@ -66,7 +66,8 @@ dataset = DeepFashion2Dataset(DATA_PATH,
 dataloader = DataLoader(dataset,
                         batch_size=batch_size,
                         shuffle=True,
-                        num_workers=data_load_workers)
+                        num_workers=data_load_workers,
+                        pin_memory=True)
 
 batches_per_epoch = len(dataloader)
 
