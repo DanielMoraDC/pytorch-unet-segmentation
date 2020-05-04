@@ -2,4 +2,5 @@
 deep_fashion
 __pycache__
 .ipynb_checkpoints
+**.pt
 
