@@ -53,7 +53,9 @@ class DeepFashion2Dataset(Dataset):
 
         valid_subsets = ['train', 'validation', 'test']
         if subset not in valid_subsets:
-            raise ValueError(f'Subset must be one of {valid_subsets}')
+            raise ValueError(
+                f'Subset must be one of {valid_subsets}. Is "{subset}"'
+            )
 
         self._data_augmentation = data_augmentation
 
