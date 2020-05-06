@@ -37,12 +37,18 @@ save_model_interval = 50000
 image_crop = 512
 image_resize = 575
 
+# Create weights for weighted loss
+base_weight = 0.25
+class_rate = np.array(
+    [0.50] +  # Set high value to background
+    [0.4039, 0.1173, 0.1587, 0.0988, 0.1774, 0.04485]  # Class presence
+)
+class_loss_weight = torch.Tensor(class_rate.max() / class_rate * base_weight)
+print(f'Using class weights: {class_loss_weight}')
 
 # ---------------
 # Model
 # ---------------
-
-
 
 if load_from is not None:
     filename = os.path.basename(load_from)
@@ -58,7 +64,7 @@ else:
 
 
 optimizer = torch.optim.SGD(unet.parameters(), lr=lr, momentum=0.99)
-cross_entropy_loss = torch.nn.CrossEntropyLoss()
+cross_entropy_loss = torch.nn.CrossEntropyLoss(weight=class_loss_weight)
 
 if cuda:
     cross_entropy_loss.cuda()
