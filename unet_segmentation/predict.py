@@ -7,7 +7,7 @@ import torch
 import numpy as np
 import matplotlib.pyplot as plt
 
-from data import DeepFashion2Dataset
+from unet_segmentation.data.dataset import SegmentationDataset
 
 # ---------------
 # Load model
@@ -19,7 +19,7 @@ unet = torch.load('unet.pt').cpu()
 # Dataset
 # ---------------
 
-dataset = DeepFashion2Dataset('seg_dataset', image_resize=256)
+dataset = SegmentationDataset('seg_dataset', image_resize=256)
 
 # ---------------
 # Show predictions

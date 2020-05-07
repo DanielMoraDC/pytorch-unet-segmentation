@@ -15,6 +15,8 @@ conda env create -f environment.yml
 conda env activate segmentation
 ```
 
+Moreover, make sure you have downloaded the Deep Fashion 2 dataset from their [Github page](https://github.com/switchablenorms/DeepFashion2).
+ 
 ## Exploring dataset
 
 You can execute the dataset exploration notebook by typing:
