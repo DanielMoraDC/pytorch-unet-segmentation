@@ -6,10 +6,6 @@ import numpy as np
 
 
 # Implementation of U-Net According to https://arxiv.org/pdf/1505.04597.pdf
-# Further work ideas:
-#    - Try LeakyReLU instead of ReLU
-#    - Increase depth of U structure
-#
 
 
 class Unet(nn.Module):
@@ -146,6 +142,3 @@ if __name__ == '__main__':
     model.apply(initialize_weights)
     input_batch = torch.randn((1, 3, 512, 512)).to(device)
     print(model(input_batch).detach().shape)
-    # exp, cont = model(input_batch)
-    # print(f'Expanding: {exp.detach().shape}')
-    # print(f'Contracting: {cont.detach().shape}')

@@ -11,14 +11,30 @@ from torch.utils.data import Dataset
 from torchvision import transforms
 import torchvision.transforms.functional as TF
 
+from unet_segmentation.data.augmentation import DataAugmentation
 
-class DeepFashion2Dataset(Dataset):
+
+class SegmentationDataset(Dataset):
 
     def __init__(self,
                  path: str,
                  image_resize: int,
                  subset: str = 'train',
                  data_augmentation: DataAugmentation = None):
+        """
+
+        Args:
+            path: Path to the root directory of the dataset. Directory is
+                expected to contain:
+                - data.json: dataset descriptor, containing at least
+                    `image_path' (i.e. path to the raw image), 'mask_path'
+                    (i.e. path to mask) and 'set' (i.e. train/validation/test).
+                - any other required files or directories (i.e. image dirs).
+            image_resize: Size images will be resized into.
+            subset: Data to retrieve (i.e. train/validation/test).
+            data_augmentation: Data augmentation parameters.
+        """
+
         self._image_resize = image_resize
 
         valid_subsets = ['train', 'validation', 'test']
@@ -87,22 +103,16 @@ def _resize_mask(mask: np.ndarray, new_size: int) -> np.ndarray:
                                     preserve_range=True).astype('uint8')
 
 
+import random
 import matplotlib.pyplot as plt
 
 if __name__ == '__main__':
 
-    augmentation = DataAugmentation(
-        central_crop_size=512,
-        h_flipping_chance=0.50,
-        brightness_rate=0.10,
-        contrast_rate=0.10,
-        saturation_rate=0.10,
-        hue_rate=0.05
-    )
+    # Display some data
 
-    data = DeepFashion2Dataset('../full_dataset',
+    data = SegmentationDataset('segmentation_dataset',
                                image_resize=580,
-                               data_augmentation=augmentation)
+                               data_augmentation=DataAugmentation())
 
     n_rows = 5
     idxs = [random.randint(0, len(data)) for _ in range(n_rows)]
