@@ -28,7 +28,7 @@ data_aug = DataAugmentation(
     saturation_rate=0.10,
     hue_rate=0.05)
 
-train_dataset = SegmentationDataset('segmentation_dataset',
+train_dataset = SegmentationDataset('full_dataset',
                                     image_resize=image_resize,
                                     data_augmentation=data_aug)
 
@@ -42,8 +42,8 @@ train_loader = DataLoader(train_dataset,
 # Validation dataset
 # --------------------
 
-val_dataset = SegmentationDataset('segmentation_dataset',
-                                  subset='train',
+val_dataset = SegmentationDataset('full_dataset',
+                                  subset='validation',
                                   image_resize=image_crop)
 
 val_loader = DataLoader(val_dataset,
@@ -79,13 +79,14 @@ params = TrainingParams(
     loss=cross_entropy_loss,
     lr=1e-3,
     momentum=0.99,
-    stats_interval=20000,
-    save_model_interval=20000,
+    stats_interval=25000,
+    save_model_interval=25000,
     save_model_dir='.',
-    n_epochs=10,
+    n_epochs=100,
     n_classes=6 + 1,  # 6 + background
     device=device,
-    checkpoint='unet_iter_750000.pt'
+    checkpoint=None
+    # checkpoint='unet_iter_750000.pt'
 )
 
 fit(params)
