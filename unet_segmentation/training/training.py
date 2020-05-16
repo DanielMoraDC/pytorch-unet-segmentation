@@ -17,7 +17,8 @@ from unet_segmentation.metrics import iou
 
 from unet_segmentation.training.stats import (
     Stats,
-    SummaryStats
+    SummaryStats,
+    MovingStats
 )
 
 
@@ -35,7 +36,6 @@ class TrainingParams(object):
     n_epochs: int
     n_classes: int
     device: torch.device
-    print_stats_interval: int = 1
     n_channels: int = 3
     tensorboard_logs_dir: str = 'logs'
     checkpoint: str = None
@@ -119,6 +119,17 @@ def _print_current_step(epoch: int,
     )
 
 
+def _print_stats(epoch: int,
+                 stats: Stats,
+                 params: TrainingParams,
+                 tag: str = 'training') -> None:
+    print(
+        f'[Epoch {epoch}/{params.n_epochs}] ' +
+        f'{tag} loss: {stats.loss.item():.4f}, ' +
+        f'{tag} Iou: {stats.iou_value:.2f}'
+    )
+
+
 def _load_model(params: TrainingParams) -> Tuple[Unet, int]:
     checkpoint = params.checkpoint
     if checkpoint is not None:
@@ -160,6 +171,8 @@ def fit(params: TrainingParams) -> None:
 
     n_batches = len(params.train_loader)
     train_writer, val_writer = _initialize_writers(params)
+    stats = MovingStats()
+
     for epoch in range(params.n_epochs):
 
         for batch_idx, (imgs, masks) in enumerate(params.train_loader):
@@ -174,11 +187,14 @@ def fit(params: TrainingParams) -> None:
                                          model=unet,
                                          optimizer=optimizer,
                                          params=params)
+            stats.update(training_stats.loss, training_stats.iou_value)
 
-            if iteration % params.print_stats_interval == 0:
-                _print_current_step(epoch, batch_idx, training_stats, params)
+            if iteration % params.stats_interval == 0 and iteration != 0:
+                # Replace step metrics with moving metrics
+                training_stats.loss = stats.moving_loss()
+                training_stats.iou_value = stats.moving_iou()
+                stats.restart()
 
-            if iteration % params.stats_interval == 0:
                 # Track training summary
                 training_summary = SummaryStats.from_stats(training_stats,
                                                            iteration)
@@ -190,7 +206,10 @@ def fit(params: TrainingParams) -> None:
                                                              iteration)
                 validation_summary.track(val_writer)
 
-            if iteration % params.save_model_interval == 0:
+                _print_stats(epoch, training_stats, params)
+                _print_stats(epoch, validation_stats, params, tag='validation')
+
+            if iteration % params.save_model_interval == 0 and iteration != 0:
                 model_path = os.path.join(params.save_model_dir,
                                           f'unet_iter_{iteration}.pt')
                 torch.save(unet, model_path)
