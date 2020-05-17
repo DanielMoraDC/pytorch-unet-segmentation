@@ -193,6 +193,7 @@ def fit(params: TrainingParams) -> None:
             if iteration % params.save_model_interval == 0:
                 model_path = os.path.join(params.save_model_dir,
                                           f'unet_iter_{iteration}.pt')
-                torch.save(unet, model_path)
+                torch.save(unet.state_dict(), model_path)
 
-    torch.save(unet, os.path.join(params.save_model_dir, f'unet_final.pt'))
+    torch.save(unet.state_dict(),
+               os.path.join(params.save_model_dir, f'unet_final.pt'))
