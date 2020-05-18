@@ -189,7 +189,8 @@ def fit(params: TrainingParams) -> None:
                                          params=params)
             stats.update(training_stats.loss, training_stats.iou_value)
 
-            if iteration % params.stats_interval == 0 and iteration != 0:
+            if iteration % params.stats_interval == 0 \
+                    and iteration != iteration_offset:
                 # Replace step metrics with moving metrics
                 training_stats.loss = stats.moving_loss()
                 training_stats.iou_value = stats.moving_iou()
@@ -209,7 +210,8 @@ def fit(params: TrainingParams) -> None:
                 _print_stats(epoch, training_stats, params)
                 _print_stats(epoch, validation_stats, params, tag='validation')
 
-            if iteration % params.save_model_interval == 0 and iteration != 0:
+            if iteration % params.save_model_interval == 0 and \
+                    iteration != iteration_offset:
                 model_path = os.path.join(params.save_model_dir,
                                           f'unet_iter_{iteration}.pt')
                 torch.save(unet, model_path)
