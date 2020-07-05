@@ -2,8 +2,13 @@ import torch
 import numpy as np
 
 
-def iou(y_true: torch.Tensor, y_pred: torch.Tensor) -> float:
+def mean_iou(y_true: torch.Tensor, y_pred: torch.Tensor) -> float:
     """ Computes the mean of the Intersection over union of all classes """
+    return np.mean(iou(y_true, y_pred))
+
+
+def iou(y_true: torch.Tensor, y_pred: torch.Tensor) -> float:
+    """ Computes the Intersection over all classes of the inputs """
     true_classes = y_true.unique().detach()
     predicted_image = torch.argmax(y_pred, dim=1)
 
@@ -15,4 +20,4 @@ def iou(y_true: torch.Tensor, y_pred: torch.Tensor) -> float:
         return (intersection.float().sum() / union.float().sum()).mean()
 
     # Iterate over true classes so we never have a zero division
-    return np.mean([_class_iou(c).item() for c in true_classes if c != 0])
+    return [_class_iou(c).item() for c in true_classes if c != 0]

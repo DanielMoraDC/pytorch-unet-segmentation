@@ -13,7 +13,7 @@ from unet_segmentation.unet import (
     initialize_weights
 )
 
-from unet_segmentation.metrics import iou
+from unet_segmentation.metrics import mean_iou
 
 from unet_segmentation.training.stats import (
     Stats,
@@ -68,7 +68,7 @@ def _validation_eval(model: Unet,
             loss = params.loss(predicted_masks, batch_masks)
 
             losses.append(loss)
-            ious.append(iou(batch_masks, predicted_masks))
+            ious.append(mean_iou(batch_masks, predicted_masks))
 
             if i in sample_idxs:
                 image_samples.append(imgs)
@@ -104,7 +104,7 @@ def _train_step(image_batch: torch.Tensor,
         masks=torch.unsqueeze(mask_batch, dim=1),
         predictions=predicted_masks,
         loss=loss,
-        iou_value=iou(mask_batch, predicted_masks)
+        iou_value=mean_iou(mask_batch, predicted_masks)
     )
 
 
