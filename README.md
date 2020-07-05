@@ -39,6 +39,20 @@ Metrics in Tensorboard     |  Predicted and groundtruth masks in Tensorboard
 :-------------------------:|:-------------------------:
 ![](images/scalars.png)  |  ![](images/masks.png)
 
+## Pre-trained model
+
+A  pre-trained model (Mean IOU 0.63) is available [here](https://drive.google.com/file/d/14sGpk_HUcAPdWl2bnFA6wKj2O_7wk2yQ/view?usp=sharing).
+
+Given model weights are in `unet.pt`, you can predict mask on example `example.png` by:
+
+```python
+import torch
+from unet_segmentation.prediction.display import display_prediction
+
+model = torch.load('unet.pt')
+display_prediction(model, 'example.png')
+``` 
+
 # Future work
 
 - [ ] Add test evaluation for generated models.
