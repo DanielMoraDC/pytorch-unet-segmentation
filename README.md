@@ -8,7 +8,7 @@ using Unet for Pytorch.
 Make sure conda >=4.8.3 is installed in your system. Then, type:
 
 ```shell script
-conda env create -f unet_segmentation/environment.yml
+conda env create -f environment.yml
 conda env activate unet
 ```
 
@@ -16,7 +16,7 @@ conda env activate unet
 
 First of all, we need to ensure we have data to train on. We can generate
 fashion data through the Deep Fashion 2 dataset by following the instructions
-in the [dataset directory](dataset).
+in the [datasets directory](datasets).
 
 Once your dataset is generated and your environment is active, you can type:
 
