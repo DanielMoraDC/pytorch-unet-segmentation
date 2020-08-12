@@ -41,7 +41,7 @@ Metrics in Tensorboard     |  Predicted and groundtruth masks in Tensorboard
 
 ## Pre-trained model
 
-A  pre-trained model (Mean IOU 0.63) is available [here](https://drive.google.com/file/d/14sGpk_HUcAPdWl2bnFA6wKj2O_7wk2yQ/view?usp=sharing).
+A  pre-trained model (Mean IOU 0.63) is available [here](https://drive.google.com/file/d/1sC_puW3pc6P75KTi2hJxgjgUiZo3zl1Q/view?usp=sharing).
 
 Given model weights are in `unet.pt`, you can predict mask on example `example.png` by:
 
